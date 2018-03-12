@@ -990,74 +990,6 @@ bool test_radix_tree(void)
 	return true;
 }
 
-/* Assorted FS tests, which were hanging around in init.c */
-// TODO: remove all the print statements and try to convert most into assertions
-bool test_random_fs(void)
-{
-	int retval = do_symlink("/dir1/sym", "/bin/hello", S_IRWXU);
-	KT_ASSERT_M("symlink1 should be created successfully",
-	            (!retval));
-	retval = do_symlink("/symdir", "/dir1/dir1-1", S_IRWXU);
-	KT_ASSERT_M("symlink1 should be created successfully",
-	            (!retval));
-	retval = do_symlink("/dir1/test.txt", "/dir2/test2.txt", S_IRWXU);
-	KT_ASSERT_M("symlink2 should be created successfully",
-	            (!retval));
-	retval = do_symlink("/dir1/dir1-1/up", "../../", S_IRWXU);
-	KT_ASSERT_M("symlink3 should be created successfully",
-	            (!retval));
-	retval = do_symlink("/bin/hello-sym", "hello", S_IRWXU);
-	KT_ASSERT_M("symlink4 should be created successfully",
-	            (!retval));
-
-	struct dentry *dentry;
-	struct nameidata nd_r = {0}, *nd = &nd_r;
-	retval = path_lookup("/dir1/sym", 0, nd);
-	KT_ASSERT_M("symlink lookup should work for an existing symlink",
-	            (!retval));
-	char *symname = nd->dentry->d_inode->i_op->readlink(nd->dentry);
-	printk("Pathlookup got %s (sym)\n", nd->dentry->d_name.name);
-	if (!symname)
-		printk("symlink reading failed\n");
-	else
-		printk("Symname: %s (/bin/hello)\n", symname);
-	path_release(nd);
-	/* try with follow */
-	memset(nd, 0, sizeof(struct nameidata));
-	retval = path_lookup("/dir1/sym", LOOKUP_FOLLOW, nd);
-
-	KT_ASSERT_M("symlink lookup should work for an existing symlink",
-	            (!retval));
-	printk("Pathlookup got %s (hello)\n", nd->dentry->d_name.name);
-	path_release(nd);
-
-	/* try with a directory */
-	memset(nd, 0, sizeof(struct nameidata));
-	retval = path_lookup("/symdir/f1-1.txt", 0, nd);
-	KT_ASSERT_M("symlink lookup should work for an existing symlink",
-	            (!retval));
-	printk("Pathlookup got %s (f1-1.txt)\n", nd->dentry->d_name.name);
-	path_release(nd);
-
-	/* try with a rel path */
-	printk("Try with a rel path\n");
-	memset(nd, 0, sizeof(struct nameidata));
-	retval = path_lookup("/symdir/up/hello.txt", 0, nd);
-	KT_ASSERT_M("symlink lookup should work for an existing symlink",
-	            (!retval));
-	printk("Pathlookup got %s (hello.txt)\n", nd->dentry->d_name.name);
-	path_release(nd);
-
-	printk("Try for an ELOOP\n");
-	memset(nd, 0, sizeof(struct nameidata));
-	retval = path_lookup("/symdir/up/symdir/up/symdir/up/symdir/up/hello.txt", 0, nd);
-	KT_ASSERT_M("symlink lookup should fail for a non existing symlink",
-	            (retval));
-	path_release(nd);
-
-	return true;
-}
-
 /* Kernel message to restart our kthread */
 static void __test_up_sem(uint32_t srcid, long a0, long a1, long a2)
 {
@@ -2066,7 +1998,6 @@ static struct ktest ktests[] = {
 	KTEST_REG(bcq,                CONFIG_TEST_bcq),
 	KTEST_REG(ucq,                CONFIG_TEST_ucq),
 	KTEST_REG(radix_tree,         CONFIG_TEST_radix_tree),
-	KTEST_REG(random_fs,          CONFIG_TEST_random_fs),
 	KTEST_REG(kthreads,           CONFIG_TEST_kthreads),
 	KTEST_REG(kref,               CONFIG_TEST_kref),
 	KTEST_REG(atomics,            CONFIG_TEST_atomics),
