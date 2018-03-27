@@ -117,6 +117,11 @@ static inline void fs_file_perm_check(struct fs_file *f, int omode)
 	dir_perm_check(&f->dir, omode);
 }
 
+static inline size_t fs_file_get_length(struct fs_file *f)
+{
+	return ACCESS_ONCE(f->dir.length);
+}
+
 void fs_file_init(struct fs_file *f, const char *name, struct fs_file_ops *ops);
 void fs_file_set_basename(struct fs_file *f, const char *name);
 void fs_file_change_basename(struct fs_file *f, const char *name);
