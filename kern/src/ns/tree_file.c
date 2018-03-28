@@ -88,6 +88,11 @@ static void __tf_free(struct tree_file *tf)
 	bool destroy_tfs = false;
 
 	tf->tfs->tf_ops.free(tf);
+
+	// XXX 
+	printk("FREEING %s\n", tree_file_to_name(tf));
+
+	
 	if (tf->flags & TF_F_IS_ROOT) {
 		assert(tfs->root == tf);
 		assert(!parent);
@@ -954,6 +959,15 @@ ssize_t tree_file_readdir(struct tree_file *parent, void *ubuf, size_t n,
 	return so_far;
 }
 
+// XXX this only works for frontend-only FSs
+// 		gtfs needs to read the real backend, which bypasses the page cache, so
+// 		you can't use fs_file_read
+// 		could have a TFS op for readdir?  relationship with dri might be weird
+// 		wait - how do they get by without fucking with dri?
+// 			dri is for our own use
+// 			might be a better question about how 9p gets by with interleaved
+// 			reads for a readdir
+// 				you can get weirdness, just like with tf_readdir
 size_t tree_chan_read(struct chan *c, void *ubuf, size_t n, off64_t offset)
 {
 	struct tree_file *tf = chan_to_tree_file(c);

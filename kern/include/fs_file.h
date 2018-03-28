@@ -90,6 +90,8 @@ struct fs_file_ops {
 	bool (*can_grow_to)(struct fs_file *f, size_t len);
 };
 
+// XXX for various pruning (set on write etc)
+// flags are unused so far.  could have CAN_MMAP, to not use the pm pointer
 #define FSF_DIRTY				(1 << 1)
 #define FSF_IS_OPEN				(1 << 2)
 

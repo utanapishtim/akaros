@@ -81,8 +81,17 @@ int radix_insert(struct radix_tree *tree, unsigned long key, void *item,
 			r_node->leaf = TRUE;
 			r_node->parent = 0;
 		}
+		// XXX rcu assign, though are there issues with depth and upper bound
+		// being changed?  might need a seq or o/w do this atomically
+		// 		when does lookup care about those, and if they start in a tree
+		// 		of the old depth, can they keep going?  or do they need to do
+		// 		the entire seq retry?
+		// 			might be OK, since they just wouldn't find it under the old
+		// 			style
+		// 			danger is that where they think is root doesn't match the
+		// 			depth, such that they treat a leaf like an rnode
 		tree->root = r_node;
-		r_node->my_slot = &tree->root;
+		r_node->my_slot = &tree->root;// XXX might need to do this before assign
 		tree->depth++;
 		tree->upper_bound = 1ULL << (LOG_RNODE_SLOTS * tree->depth);
 	}
@@ -94,8 +103,8 @@ int radix_insert(struct radix_tree *tree, unsigned long key, void *item,
 	slot = &r_node->items[key & (NR_RNODE_SLOTS - 1)];
 	if (*slot)
 		return -EEXIST;
-	*slot = item;
-	r_node->num_items++;
+	*slot = item;	// rcu assign XXX
+	r_node->num_items++;	// only lock holders care about this, right? XXX
 	if (slot_p)
 		*slot_p = slot;
 	return 0;
